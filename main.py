@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 
 # global counter (race condition prone!)
 COUNTER: int = 0
-exit_flag = False
+exit_flag = threading.Event()
 
 def post_requests(user: str, text: str) -> None:
     global COUNTER
@@ -24,7 +24,7 @@ def post_requests(user: str, text: str) -> None:
         'referrer': '',
     }
 
-    while not exit_flag:
+    while not exit_flag.is_set():
         try:
             resp = requests.post(url, data=data)
             COUNTER += 1
@@ -33,8 +33,8 @@ def post_requests(user: str, text: str) -> None:
             print(f"\n[!] Error: {e}")
 
 def exit_prog(sig: int, frame) -> None:
-    global exit_flag
-    exit_flag = True
+    print(f"\n[-] CTRL+c pressed killing all threads")
+    exit_flag.set()
 
 def main() -> None:
     user: str = input("[*] Enter the username: ")
@@ -50,7 +50,8 @@ def main() -> None:
 
     for thread in threads:
         thread.join()
+    
+    printf(f"[*] All threads were killed gracefully")
 
 if __name__ == "__main__":
     main()
-    print(f"\n\n[-]CTRL+c pressed killing all threads!")
