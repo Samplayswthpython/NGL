@@ -51,7 +51,7 @@ def main() -> None:
     for thread in threads:
         thread.join()
     
-    printf(f"[*] All threads were killed gracefully")
+    print(f"[*] All threads were killed gracefully")
 
 if __name__ == "__main__":
     main()
