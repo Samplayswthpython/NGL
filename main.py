@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 
 # global counter (race condition prone!)
 COUNTER: int = 0
-COOLDOWN_TIMER: int = 2
+COOLDOWN_TIMER: int = 2 # in seconds
 
 exit_flag = threading.Event()
 cooldown_event = threading.Event()
@@ -51,14 +51,13 @@ def post_requests(user: str, text: str) -> None:
 
     while not exit_flag.is_set():
         while cooldown_event.is_set() and not exit_flag.is_set():
-            time.sleep(2)
+            time.sleep(0.8)
 
         data['deviceId'] = deviceId()
 
         try:
             resp = requests.post(url, data=data)
             COUNTER += 1
-            # if u get a timer
             print(f"\r[$] Message's sent to {user}: {COUNTER}", end="")
             if resp.status_code != 200:
                 trigger_cooldown()
