@@ -41,59 +41,34 @@ def count_cooldown() -> None:
     time.sleep(COOLDOWN_TIMER)
     cooldown_event.clear()
 
-def post_requests(user: str, text) -> None:
+def post_requests(user: str) -> None:
     global COUNTER
     url: str = "https://ngl.link/api/submit"
 
-    if text: 
-        data: dict[str, str] = {
-            'username': user,
-            'question': text, 
-            'gameSlug': '' ,
-            'referrer': '',
-        }
-
-        while not exit_flag.is_set():
-            while cooldown_event.is_set() and not exit_flag.is_set():
-                print(f"\r[$] Message's sent to {user}: {COUNTER}    [cooldown]", end="")
-                time.sleep(0.8)
-
-            data['deviceId'] = deviceId()
-
-            try:
-                resp = requests.post(url, data=data)
-                COUNTER += 1
-                print(f"\r[$] Message's sent to {user}: {COUNTER}                      ", end="")
-                if resp.status_code != 200:
-                    trigger_cooldown()
-            except Exception as e:
-                print(f"\n[!] Error: {e}")
-
+    data: dict[str, str] = {
+        'username': user,
+        'gameSlug': '' ,
+        'referrer': '',
+    }
+    
+    while not exit_flag.is_set():
+        while cooldown_event.is_set() and not exit_flag.is_set():
+            print(f"\r[$] Message's sent to {user}: {COUNTER}    [cooldown]", end="")
             time.sleep(0.8)
-    else:
-        data: dict[str, str] = {
-            'username': user,
-            'gameSlug': '' ,
-            'referrer': '',
-        }
-        while not exit_flag.is_set():
-            while cooldown_event.is_set() and not exit_flag.is_set():
-                print(f"\r[$] Message's sent to {user}: {COUNTER}    [cooldown]", end="")
-                time.sleep(0.8)
 
-            data['question'] = random.choice(QUESTIONS), 
-            data['deviceId'] = deviceId()
+        data['question'] = random.choice(QUESTIONS)
+        data['deviceId'] = deviceId()
 
-            try:
-                resp = requests.post(url, data=data)
-                COUNTER += 1
-                print(f"\r[$] Message's sent to {user}: {COUNTER}                 ", end="")
-                if resp.status_code != 200:
-                    trigger_cooldown()
-            except Exception as e:
-                print(f"\n[!] Error: {e}")
+        try:
+            resp = requests.post(url, data=data)
+            COUNTER += 1
+            print(f"\r[$] Message's sent to {user}: {COUNTER}              ", end="")
+            if resp.status_code != 200:
+                trigger_cooldown()
+        except Exception as e:
+            print(f"\n[!] Error: {e}")
 
-            time.sleep(0.8)
+        time.sleep(0.8)
 
 def exit_prog(sig: int, frame) -> None:
     print(f"\n[-] CTRL+c pressed killing all threads")
@@ -101,23 +76,22 @@ def exit_prog(sig: int, frame) -> None:
 
 def main() -> None:
     global QUESTIONS
-    user: str = input("[*] Enter the username: ")
-    text = input("[*] Enter the text: ") or None
-    
-    if not text:
-        data = requests.get("https://cdn.simplelocalize.io/d6cb2f56863b434c8fba40f9404505f9/_latest/en")
-        if data.status_code != 200:
-            print("Failed to send data!\n")
-            return
 
-        QUESTIONS = tuple(json.loads(data.text).values())
-        print(len(QUESTIONS))
+    if len(sys.argv) < 2:
+        print(f"[?] Usage: {sys.argv[0]} <username> <wordlist>")
+        return
 
+    if len(sys.argv) >= 3:
+        with open(sys.argv[2]) as file:
+            QUESTIONS = tuple(i for i in file.read().split("\n") if i)
+    else:
+        QUESTIONS = tuple(i for i in sys.stdin.read().split("\n") if i)
+        
     signal.signal(signal.SIGINT, exit_prog)
-    
+
     threads = []
     for _ in range(20):
-        thread = threading.Thread(target=post_requests, args=(user, text))
+        thread = threading.Thread(target=post_requests, args=(sys.argv[1],))
         threads.append(thread)
         thread.start()
 
