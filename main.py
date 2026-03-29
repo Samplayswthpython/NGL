@@ -5,7 +5,7 @@ import threading
 import json
 import random
 import string
-import time 
+import time
 import sys
 try:
     import requests
@@ -50,7 +50,7 @@ def post_requests(user: str) -> None:
         'gameSlug': '' ,
         'referrer': '',
     }
-    
+
     while not exit_flag.is_set():
         while cooldown_event.is_set() and not exit_flag.is_set():
             print(f"\r[$] Message's sent to {user}: {COUNTER}    [cooldown]", end="")
@@ -86,7 +86,7 @@ def main() -> None:
             QUESTIONS = tuple(i for i in file.read().split("\n") if i)
     else:
         QUESTIONS = tuple(i for i in sys.stdin.read().split("\n") if i)
-        
+
     signal.signal(signal.SIGINT, exit_prog)
 
     threads = []
@@ -97,7 +97,7 @@ def main() -> None:
 
     for thread in threads:
         thread.join()
-    
+
     print(f"\n[*] All threads were killed gracefully")
 
 if __name__ == "__main__":
